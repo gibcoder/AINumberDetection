@@ -1,14 +1,35 @@
 import numpy as np
 from tensorflow.keras.datasets import mnist
 import pickle
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 
-#image = Image.new('L', (28, 28), color=255)
-#draw = ImageDraw.Draw(image)
-#font = ImageFont.truetype("arial.ttf", 20)  
-#draw.text((7, 4), '4', font=font, fill=0) 
+image = Image.new('L', (28, 28), color=255)
+draw = ImageDraw.Draw(image)
+font = ImageFont.truetype("arial.ttf", 20)  
+draw.text((7, 4), '0', font=font, fill=0) 
+
+#1=1
+#2=8
+#3=8
+#4=6
+#5=5
+#6=6
+#7=7
+#8=8
+#9-8
+#0=6
+
+
+
+
+
+
+
+#image = ImageOps.invert(image)
 #test_input = list(image.getdata())
+#test_input_array = np.array(test_input, dtype='float32') / 255.0
+#test_input_array = test_input_array.reshape(1, -1)
 
 
 class NeuralNetwork:
@@ -21,21 +42,21 @@ class NeuralNetwork:
         self.biases = []
         
         
-        #self.weights.append(
-            #(np.random.randn(input_size, hidden_layers[0]) * np.sqrt(2. / input_size)).astype(np.float32)
-        #)
-        #self.biases.append(np.zeros((1, hidden_layers[0]), dtype=np.float32))
+        self.weights.append(
+            (np.random.randn(input_size, hidden_layers[0]) * np.sqrt(2. / input_size)).astype(np.float32)
+        )
+        self.biases.append(np.zeros((1, hidden_layers[0]), dtype=np.float32))
         
-        #for i in range(len(hidden_layers) - 1):
-        #    self.weights.append(
-        #        (np.random.randn(hidden_layers[i], hidden_layers[i + 1]) * np.sqrt(2. / hidden_layers[i])).astype(np.float32)
-        #    )
-        #    self.biases.append(np.zeros((1, hidden_layers[i + 1]), dtype=np.float32))
+        for i in range(len(hidden_layers) - 1):
+            self.weights.append(
+                (np.random.randn(hidden_layers[i], hidden_layers[i + 1]) * np.sqrt(2. / hidden_layers[i])).astype(np.float32)
+            )
+            self.biases.append(np.zeros((1, hidden_layers[i + 1]), dtype=np.float32))
     
-        #self.weights.append(
-        #    (np.random.randn(hidden_layers[-1], output_size) * np.sqrt(2. / hidden_layers[-1])).astype(np.float32)
-        #)
-        #self.biases.append(np.zeros((1, output_size), dtype=np.float32))
+        self.weights.append(
+            (np.random.randn(hidden_layers[-1], output_size) * np.sqrt(2. / hidden_layers[-1])).astype(np.float32)
+        )
+        self.biases.append(np.zeros((1, output_size), dtype=np.float32))
     
     def forward(self, inputs):
         layers = [inputs]
@@ -116,47 +137,33 @@ def main():
     
     input_size = 784  
     nn = NeuralNetwork(input_size=input_size, hidden_layers=[512, 512], output_size=10, learning_rate=0.01)
-    with open('nn_weights.pkl', 'rb') as f:
-        loaded_weights, loaded_biases = pickle.load(f)
-        nn.weights = loaded_weights
-        nn.biases = loaded_biases
+    #with open('nn_weights.pkl', 'rb') as f:
+        #loaded_weights, loaded_biases = pickle.load(f)
+       # nn.weights = loaded_weights
+        #nn.biases = loaded_biases
     
-    ##print("training...")
-    ##nn.training(x_train[:10000], y_train[:10000], epochs=50)  # Using 10,000 samples for faster training
-    ##print("training completed.")
-    ##with open('nn_biases_weights.pkl', 'wb') as f:
-        ##pickle.dump((nn.weights, nn.biases), f)
-    ##print("Weights and biases saved to 'nn_weights.pkl'.")
+    print("training...")
+    nn.training(x_train[:10000], y_train[:10000], epochs=15)  # Using 10,000 samples for faster training
+    print("training completed.")
+    with open('nnbiasesandweights15epochs.pkl', 'wb') as f:
+        pickle.dump((nn.weights, nn.biases), f)
+    print("Weights and biases saved to 'nn_weights.pkl'.")
     
 
     ##alter the input from database here
-    num_test_samples = 10000
-    correct_predictions = 0
-    ##96.41% accurate
-    
-    for i in range(num_test_samples):
-        test_input = x_test[i].reshape(1, -1)
-        predicted_digit, output_probs = predict(nn, test_input)
-        actual_digit = y_test[i]
-        if predicted_digit[0] == actual_digit:
-            correct_predictions += 1
-        
-        print(f"Sample {i+1}: Predicted {predicted_digit[0]}, Actual {actual_digit}")
-    
-    accuracy = (correct_predictions / num_test_samples) * 100
-    print(f"\n--- Test Evaluation ---")
-    print(f"Accuracy on the first {num_test_samples} test samples: {accuracy:.2f}%")
-    print("\n--- Test Result ---")
+    test_input = x_test[5].reshape(1, -1)
 
-    #print("Output probabilities:", output_probs)
-    #print("Predicted digit:", predicted_digit)
-    #print("Actual digit:", y_test[5])
+    predicted_digit, output_probs = predict(nn, test_input)
+    
+    print("\n--- Test Result ---")
+    print("Output probabilities:", output_probs)
+    print("Predicted digit:", predicted_digit)
+    print("Actual digit",y_test[5])
 
 def predict(nn, input_data):
     layers = nn.forward(input_data)
     output = nn.softmax(layers[-1])
-    predicted_digits = np.argmax(output, axis=1)
-    return predicted_digits, output
+    return np.argmax(output), output
 
 if __name__ == "__main__":
     main()
